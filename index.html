@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Chat</title>
+</head>
+<body>
+    <ul id="messages"></ul>
+
+    <form id="form">
+        <input id="input" autocomplete="off" />
+        <button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let username = "";
+        while (!username){
+            username = prompt("Enter your name: ");
+        }
+
+        const socket = io();
+
+        socket.on("connect", () => {
+            socket.emit("set username", username);
+        })
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+        socket.on('chat message', (data) => {
+            const li = document.createElement("li");
+
+            if (typeof data === "string") {
+                li.textContent = data;
+            }else{
+                li.id = data.id;
+                li.textContent = data.text;
+            }
+            messages.appendChild(li);
+
+        });
+
+        socket.on("chat update", (data) => {
+            const li = document.getElementById(data.id);
+            if(li){
+                li.textContent = data.text;
+            }
+        });
+    </script>
+</body>
+</html>
